@@ -32,6 +32,14 @@ resource "aws_instance" "instance1" {
   #  depends_on      = [aws_vpc.test_vpc]
 }
 
+resource "aws_eip_association" "test_eip_ass" {
+  instance_id   = aws_instance.instance1.id
+  allocation_id = aws_eip.test_eip.id
+}
+
+resource "aws_eip" "test_eip" {
+  vpc = true
+}
 #data "aws_instance" "instance1" {
 #  instance_id = aws_instance.instance1.id
 #}
@@ -49,8 +57,9 @@ resource "aws_instance" "instance1" {
 #}
 
 resource "aws_vpc" "test_vpc" {
-  cidr_block         = "10.10.0.0/16"
-  enable_dns_support = "true"
+  cidr_block           = "10.10.0.0/16"
+  enable_dns_support   = "true"
+  enable_dns_hostnames = "true"
 
   tags = {
     name = "Test VPC"
@@ -59,8 +68,109 @@ resource "aws_vpc" "test_vpc" {
 }
 
 resource "aws_subnet" "test_subnet" {
+  vpc_id                  = aws_vpc.test_vpc.id
+  cidr_block              = "10.10.10.0/24"
+  map_public_ip_on_launch = "true"
+  tags = {
+    Name = "test_subnet"
+  }
+}
+
+resource "aws_internet_gateway" "test_igw" {
+  vpc_id = aws_vpc.test_vpc.id
+  tags = {
+    Name = "test_igw"
+  }
+}
+
+resource "aws_route_table" "test_rt" {
+  vpc_id = aws_vpc.test_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test_igw.id
+  }
+}
+
+resource "aws_route_table_association" "test_rt_ass" {
+  subnet_id      = aws_subnet.test_subnet.id
+  route_table_id = aws_route_table.test_rt.id
+}
+
+resource "aws_network_acl" "test_nacl" {
   vpc_id     = aws_vpc.test_vpc.id
-  cidr_block = "10.10.10.0/24"
+  subnet_ids = [aws_subnet.test_subnet.id]
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 120
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = 22
+    to_port    = 22
+  }
+  egress {
+    protocol   = "tcp"
+    rule_no    = 120
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = 22
+    to_port    = 22
+  }
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 90
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = 22
+    to_port    = 22
+  }
+  egress {
+    protocol   = "tcp"
+    rule_no    = 90
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = 22
+    to_port    = 22
+  }
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = 80
+    to_port    = 80
+  }
+  egress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = 80
+    to_port    = 80
+  }
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 200
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = 443
+    to_port    = 443
+  }
+  egress {
+    protocol   = "tcp"
+    rule_no    = 200
+    action     = "allow"
+    cidr_block = var.my_ip
+    from_port  = 443
+    to_port    = 443
+  }
+  egress {
+    protocol   = "tcp"
+    rule_no    = 500
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
 }
 
 resource "aws_security_group" "test_sg" {
@@ -71,7 +181,7 @@ resource "aws_security_group" "test_sg" {
   ingress {
     from_port        = 80
     to_port          = 80
-    protocol         = "-1"
+    protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
@@ -79,7 +189,7 @@ resource "aws_security_group" "test_sg" {
   ingress {
     from_port        = 22
     to_port          = 22
-    protocol         = "-1"
+    protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
@@ -87,6 +197,13 @@ resource "aws_security_group" "test_sg" {
   ingress {
     from_port        = 443
     to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  egress {
+    from_port        = 0
+    to_port          = 0
     protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
@@ -150,6 +267,10 @@ variable "ami_sydney" {
 
 variable "ec2_type" {
   default = "t2.micro"
+}
+
+variable "my_ip" {
+  default = "117.20.69.72/32"
 }
 
 #variable "subnet_10" {
