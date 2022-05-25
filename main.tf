@@ -47,9 +47,7 @@ resource "aws_instance" "instance1" {
 #}
 
 resource "aws_vpc" "test_vpc" {
-  #  name               = "Test-VPC"
-  cidr_block = "10.10.0.0/16"
-  # instance_tenancy   = "default"
+  cidr_block         = "10.10.0.0/16"
   enable_dns_support = "true"
 
   tags = {
@@ -75,10 +73,20 @@ resource "aws_security_group" "test_sg" {
 #Test S3 Bucket
 resource "aws_s3_bucket" "tests3" {
   bucket = "dennis-terraform-test"
-  versioning {
-    enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "tests3ver" {
+  bucket = aws_s3_bucket.tests3.id
+
+  versioning_configuration {
+    status = "Enabled"
   }
 }
+
+#  versioning {
+#    enabled = true
+#  }
+
 #Default S3 Bucket - Unmanaged
 #resource "aws_s3_bucket" "importeds3" {
 #  bucket = "dennistestbucket123456"
