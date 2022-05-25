@@ -33,13 +33,13 @@ resource "aws_instance" "instance1" {
 #data "aws_instance" "instance1" {
 #  instance_id = aws_instance.instance1.id
 #}
-
 #resource "aws_network_interface_sg_attachment" "sg_attachment" {
 #  security_group_id    = aws_security_group.test_sg.id
 #  network_interface_id = aws_instance.instance1.network_interface_id
 
 #################Network Configs######################
 ######################################################
+
 #Default VPC - Unmanaged
 #resource "aws_vpc" "main_vpc" {
 #  instance_tenancy = "default"
@@ -72,6 +72,32 @@ resource "aws_s3_bucket" "tests3" {
     enabled = true
   }
 }
+#Default S3 Bucket - Unmanaged
+#resource "aws_s3_bucket" "importeds3" {
+#  bucket = "dennistestbucket123456"
+#  versioning {
+#    enabled = true
+#  }
+#}
+#resource "aws_s3_bucket_versioning" "mys3bucketver1" {
+#  bucket = aws_s3_bucket.mys3bucket1.id
+#  versioning_configuration {
+#    status = "Enabled"
+#  }
+#}
+#resource "aws_s3_bucket_acl" "mys3bucketacl1" {
+#  bucket = aws_s3_bucket.mys3bucket1.id
+#  acl    = "private"
+#}
+#resource "aws_s3_bucket_acl" "mys3bucketacl2" {
+#  bucket = aws_s3_bucket.mys3bucket2.id
+#  acl    = "private"
+#}
+#  tags = {
+#    Name        = "test bucket"
+#    Environment = "Dev"
+#  }
+#}
 #################Variable Config######################
 ######################################################
 variable "ami_sydney" {
@@ -92,62 +118,3 @@ variable "ec2_type" {
 
 ######################################################
 ######################################################
-
-
-
-
-
-######################################################
-######################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Default S3 Bucket - Unmanaged
-#resource "aws_s3_bucket" "importeds3" {
-#  bucket = "dennistestbucket123456"
-#  versioning {
-#    enabled = true
-#  }
-#}
-
-
-
-#resource "aws_s3_bucket_versioning" "mys3bucketver1" {
-#  bucket = aws_s3_bucket.mys3bucket1.id
-#  versioning_configuration {
-#    status = "Enabled"
-#  }
-#}
-
-#resource "aws_s3_bucket_acl" "mys3bucketacl1" {
-#  bucket = aws_s3_bucket.mys3bucket1.id
-#  acl    = "private"
-#}
-
-
-
-#resource "aws_s3_bucket_acl" "mys3bucketacl2" {
-#  bucket = aws_s3_bucket.mys3bucket2.id
-#  acl    = "private"
-#}
-#  tags = {
-#    Name        = "test bucket"
-#    Environment = "Dev"
-#  }
-#}
