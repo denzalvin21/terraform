@@ -26,6 +26,7 @@ resource "aws_instance" "instance1" {
   instance_type          = var.ec2_type
   subnet_id              = aws_subnet.test_subnet.id
   vpc_security_group_ids = [aws_security_group.test_sg.id]
+  key_name               = "mykeypair"
   #security_groups = [aws_security_group.test_sg.id]
   # subnet_id              = aws_vpc.test_vpc.id
   # security_groups = aws_vpc.test_vpc.default_security_group_id.id
@@ -67,9 +68,10 @@ resource "aws_vpc" "test_vpc" {
   #  default_security_group_id = "aws_vpc.test_vpc.default_security_group_id.id"
 }
 
+#cidr_block              = "10.10.10.0/24"
 resource "aws_subnet" "test_subnet" {
   vpc_id                  = aws_vpc.test_vpc.id
-  cidr_block              = "10.10.10.0/24"
+  cidr_block              = "10.10.0.0/16"
   map_public_ip_on_launch = "true"
   tags = {
     Name = "test_subnet"
@@ -111,23 +113,7 @@ resource "aws_network_acl" "test_nacl" {
     protocol   = "tcp"
     rule_no    = 120
     action     = "allow"
-    cidr_block = var.my_ip
-    from_port  = 22
-    to_port    = 22
-  }
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 90
-    action     = "allow"
-    cidr_block = var.my_ip
-    from_port  = 22
-    to_port    = 22
-  }
-  egress {
-    protocol   = "tcp"
-    rule_no    = 90
-    action     = "allow"
-    cidr_block = var.my_ip
+    cidr_block = "0.0.0.0/0"
     from_port  = 22
     to_port    = 22
   }
@@ -135,7 +121,7 @@ resource "aws_network_acl" "test_nacl" {
     protocol   = "tcp"
     rule_no    = 100
     action     = "allow"
-    cidr_block = var.my_ip
+    cidr_block = "0.0.0.0/0"
     from_port  = 80
     to_port    = 80
   }
@@ -143,7 +129,7 @@ resource "aws_network_acl" "test_nacl" {
     protocol   = "tcp"
     rule_no    = 100
     action     = "allow"
-    cidr_block = var.my_ip
+    cidr_block = "0.0.0.0/0"
     from_port  = 80
     to_port    = 80
   }
@@ -151,7 +137,7 @@ resource "aws_network_acl" "test_nacl" {
     protocol   = "tcp"
     rule_no    = 200
     action     = "allow"
-    cidr_block = var.my_ip
+    cidr_block = "0.0.0.0/0"
     from_port  = 443
     to_port    = 443
   }
@@ -159,9 +145,39 @@ resource "aws_network_acl" "test_nacl" {
     protocol   = "tcp"
     rule_no    = 200
     action     = "allow"
-    cidr_block = var.my_ip
+    cidr_block = "0.0.0.0/0"
     from_port  = 443
     to_port    = 443
+  }
+
+  #  ingress {
+  #    protocol   = "icmp"
+  #    rule_no    = 300
+  #    action     = "allow"
+  #    cidr_block = "0.0.0.0/0"
+  #    from_port  = -1
+  #    to_port    = -1
+  #  }
+  #  egress {
+  #    protocol   = "icmp"
+  #    rule_no    = 300
+  #    action     = "allow"
+  #    cidr_block = "0.0.0.0/0"
+  #    from_port  = -1
+  #    to_port    = -1
+  #    icmp_type  = -1
+  #    icmp_code  = -1
+  #  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 500
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+    icmp_type  = -1
+    icmp_code  = -1
   }
   egress {
     protocol   = "tcp"
@@ -170,7 +186,53 @@ resource "aws_network_acl" "test_nacl" {
     cidr_block = "0.0.0.0/0"
     from_port  = 1024
     to_port    = 65535
+    icmp_type  = -1
+    icmp_code  = -1
   }
+
+  #  ingress {
+  #    protocol   = -1
+  #    rule_no    = 600
+  #    action     = "allow"
+  #    cidr_block = "0.0.0.0/0"
+  #    from_port  = 0
+  #    to_port    = 0
+  #  }
+  #  egress {
+  #    protocol   = -1
+  #    rule_no    = 600
+  #    action     = "allow"
+  #    cidr_block = "0.0.0.0/0"
+  #    from_port  = 0
+  #    to_port    = 0
+  #  }
+
+}
+
+resource "aws_network_acl_rule" "allow_ingress_icmp" {
+  network_acl_id = aws_network_acl.test_nacl.id
+  rule_number    = 300
+  egress         = false
+  protocol       = "icmp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = -1
+  to_port        = -1
+  icmp_type      = -1
+  icmp_code      = -1
+}
+
+resource "aws_network_acl_rule" "allow_egress_icmp" {
+  network_acl_id = aws_network_acl.test_nacl.id
+  rule_number    = 300
+  egress         = true
+  protocol       = "icmp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = -1
+  to_port        = -1
+  icmp_type      = -1
+  icmp_code      = -1
 }
 
 resource "aws_security_group" "test_sg" {
@@ -201,6 +263,22 @@ resource "aws_security_group" "test_sg" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
+
+  ingress {
+    from_port        = 8
+    to_port          = 0
+    protocol         = "icmp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  egress {
+    from_port        = 8
+    to_port          = 0
+    protocol         = "icmp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
   egress {
     from_port        = 0
     to_port          = 0
