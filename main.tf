@@ -21,10 +21,11 @@ terraform {
 ######################EC2 Configs#####################
 ######################################################
 resource "aws_instance" "instance1" {
-  ami             = var.ami_sydney
-  instance_type   = var.ec2_type
-  security_groups = [aws_security_group.test_sg.id]
-  # vpc_security_group_ids = [aws_security_group.test_sg.id]
+  ami                    = var.ami_sydney
+  instance_type          = var.ec2_type
+  subnet_id              = aws_subnet.test_subnet.id
+  vpc_security_group_ids = [aws_security_group.test_sg.id]
+  #security_groups = [aws_security_group.test_sg.id]
   # subnet_id              = aws_vpc.test_vpc.id
   # security_groups = aws_vpc.test_vpc.default_security_group_id.id
   #  depends_on      = [aws_vpc.test_vpc]
@@ -47,8 +48,13 @@ resource "aws_instance" "instance1" {
 
 resource "aws_vpc" "test_vpc" {
   #  name               = "Test-VPC"
-  cidr_block         = "10.10.0.0/16"
+  cidr_block = "10.10.0.0/16"
+  # instance_tenancy   = "default"
   enable_dns_support = "true"
+
+  tags = {
+    name = "Test VPC"
+  }
   #  default_security_group_id = "aws_vpc.test_vpc.default_security_group_id.id"
 }
 
@@ -65,6 +71,7 @@ resource "aws_security_group" "test_sg" {
 }
 ##################S3 Configs##########################
 ######################################################
+
 #Test S3 Bucket
 resource "aws_s3_bucket" "tests3" {
   bucket = "dennis-terraform-test"
