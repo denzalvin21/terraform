@@ -18,7 +18,8 @@ terraform {
   }
 }
 
-######################EC2 Configs#####################
+######################################################
+#     EC2 Configs
 ######################################################
 resource "aws_instance" "instance1" {
   ami                    = var.ami_sydney
@@ -38,7 +39,8 @@ resource "aws_instance" "instance1" {
 #  security_group_id    = aws_security_group.test_sg.id
 #  network_interface_id = aws_instance.instance1.network_interface_id
 
-#################Network Configs######################
+######################################################
+#     Network Configs
 ######################################################
 
 #Default VPC - Unmanaged
@@ -59,15 +61,40 @@ resource "aws_vpc" "test_vpc" {
 resource "aws_subnet" "test_subnet" {
   vpc_id     = aws_vpc.test_vpc.id
   cidr_block = "10.10.10.0/24"
-  #  depends_on = [aws_vpc.test_vpc]
 }
 
 resource "aws_security_group" "test_sg" {
-  name   = "Test-SG"
-  vpc_id = aws_vpc.test_vpc.id
-  #  depends_on = [aws_vpc.test_vpc]
+  name        = "Test-SG"
+  description = "Test Security Group"
+  vpc_id      = aws_vpc.test_vpc.id
+
+  ingress {
+    from_port        = 80
+    to_port          = 80
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    from_port        = 22
+    to_port          = 22
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    from_port        = 443
+    to_port          = 443
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
 }
-##################S3 Configs##########################
+
+######################################################
+#     S3 Configs
 ######################################################
 
 #Test S3 Bucket
@@ -113,7 +140,9 @@ resource "aws_s3_bucket_versioning" "tests3ver" {
 #    Environment = "Dev"
 #  }
 #}
-#################Variable Config######################
+
+######################################################
+#     Variable Configs
 ######################################################
 variable "ami_sydney" {
   default = "ami-0c6120f461d6b39e9"
@@ -130,6 +159,6 @@ variable "ec2_type" {
 ######################################################
 
 
-
+######################################################
 ######################################################
 ######################################################
